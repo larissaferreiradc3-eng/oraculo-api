@@ -1,0 +1,100 @@
+{
+  "updatedAt": 1770130322973,
+  "mesas": [
+    {
+      "mesaId": "block-8-213",
+      "mesaNome": "Korean Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 19,
+      "timestamp": 1770130280209
+    },
+    {
+      "mesaId": "block-ezugi-481010",
+      "mesaNome": "EZ Dealer Roulette Savanna",
+      "status": "GREEN",
+      "rodada": 5,
+      "alvos": [
+        26,
+        29
+      ],
+      "ultimoNumero": 29,
+      "timestamp": 1770130322973
+    },
+    {
+      "mesaId": "block-8-201",
+      "mesaNome": "Roulette 2 Extra Time",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        24
+      ],
+      "ultimoNumero": 28,
+      "timestamp": 1770130209861
+    },
+    {
+      "mesaId": "block-3-PeryaLightnRo001",
+      "mesaNome": "Dynasty Lightning Roulette",
+      "status": "GREEN",
+      "rodada": 6,
+      "alvos": [
+        20,
+        22
+      ],
+      "ultimoNumero": 20,
+      "timestamp": 1770130189480
+    },
+    {
+      "mesaId": "block-ezugi-481004",
+      "mesaNome": "EZ Dealer Roulette Brazil",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        20,
+        22
+      ],
+      "ultimoNumero": 19,
+      "timestamp": 1770130088797
+    },
+    {
+      "mesaId": "block-ezugi-481003",
+      "mesaNome": "EZ Dealer Roulette Mandarin",
+      "status": "ATIVO",
+      "rodada": 5,
+      "alvos": [
+        26,
+        29
+      ],
+      "ultimoNumero": 18,
+      "timestamp": 1770130311770
+    },
+    {
+      "mesaId": "block-8-221",
+      "mesaNome": "Russian Roulette",
+      "status": "ATIVO",
+      "rodada": 6,
+      "alvos": [],
+      "ultimoNumero": 8,
+      "timestamp": 1770130321945
+    },
+    {
+      "mesaId": "block-3-GoldVaultRo00001",
+      "mesaNome": "Gold Vault Roulette",
+      "status": "ATIVO",
+      "rodada": 8,
+      "alvos": [],
+      "ultimoNumero": 10,
+      "timestamp": 1770130249637
+    },
+    {
+      "mesaId": "block-3-RedDoorRoulette1",
+      "mesaNome": "Red Door Roulette",
+      "status": "ATIVO",
+      "rodada": 2,
+      "alvos": [],
+      "ultimoNumero": 24,
+      "timestamp": 1770130262884
+    }
+  ]
+}

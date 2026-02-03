@@ -1,36 +1,95 @@
-// api/index.js
-// ORÁCULO API — RECEPÇÃO DE EVENTOS DO COLLECTOR
+// ORÁCULO API — VERSÃO COM PERSISTÊNCIA (RENDER FREE SAFE)
+// Mantém estado mesmo quando o Render dorme/reinicia
 
 import express from "express";
 import cors from "cors";
+import fs from "fs";
+import path from "path";
+
+/* =========================
+   CONFIG
+========================= */
+
+const PORT = process.env.PORT || 3000;
+
+// arquivo de persistência (fica no disco do Render)
+const DATA_DIR = path.resolve("./data");
+const STATE_FILE = path.join(DATA_DIR, "oraculo-state.json");
+
+/* =========================
+   HELPERS DE PERSISTÊNCIA
+========================= */
+
+function ensureStorage() {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
+
+  if (!fs.existsSync(STATE_FILE)) {
+    fs.writeFileSync(
+      STATE_FILE,
+      JSON.stringify(
+        {
+          updatedAt: Date.now(),
+          mesas: []
+        },
+        null,
+        2
+      )
+    );
+  }
+}
+
+function loadState() {
+  try {
+    const raw = fs.readFileSync(STATE_FILE, "utf-8");
+    return JSON.parse(raw);
+  } catch {
+    return {
+      updatedAt: Date.now(),
+      mesas: []
+    };
+  }
+}
+
+function saveState(state) {
+  try {
+    fs.writeFileSync(
+      STATE_FILE,
+      JSON.stringify(state, null, 2)
+    );
+  } catch (err) {
+    console.error("❌ ERRO AO SALVAR ESTADO:", err.message);
+  }
+}
+
+/* =========================
+   BOOT
+========================= */
+
+ensureStorage();
+
+let oraculoState = loadState();
+
+console.log("🔁 Estado carregado do disco:");
+console.log(
+  `→ mesas: ${oraculoState.mesas.length}`
+);
+
+/* =========================
+   APP
+========================= */
 
 const app = express();
 
-/* ============================
-   CONFIGURAÇÃO BÁSICA
-============================ */
-
-app.use(cors({
-  origin: "http://localhost:5173",
-  methods: ["GET", "POST"],
-  allowedHeaders: ["Content-Type"]
-}));
-
+app.use(cors());
 app.use(express.json());
 
-/* ============================
-   ESTADO GLOBAL DO ORÁCULO
-============================ */
+/* =========================
+   ROTAS
+========================= */
 
-const oraculoState = {
-  updatedAt: Date.now(),
-  mesas: []
-};
-
-/* ============================
-   ROTA: RECEBE EVENTO
-============================ */
-
+// RECEBE EVENTOS DO COLETOR
 app.post("/oraculo/evento", (req, res) => {
   const body = req.body || {};
 
@@ -44,8 +103,10 @@ app.post("/oraculo/evento", (req, res) => {
   } = body;
 
   if (!mesaId) {
-    console.error("❌ Evento rejeitado: mesaId ausente", body);
-    return res.status(400).json({ error: "mesaId é obrigatório" });
+    console.error("❌ Evento rejeitado: mesaId ausente");
+    return res
+      .status(400)
+      .json({ error: "mesaId é obrigatório" });
   }
 
   const index = oraculoState.mesas.findIndex(
@@ -70,25 +131,33 @@ app.post("/oraculo/evento", (req, res) => {
 
   oraculoState.updatedAt = Date.now();
 
-  console.log("📥 EVENTO RECEBIDO:", mesaAtualizada);
+  saveState(oraculoState);
+
+  console.log(
+    "📥 EVENTO SALVO:",
+    mesaAtualizada.mesaId,
+    mesaAtualizada.status
+  );
 
   return res.status(200).json({ ok: true });
 });
 
-/* ============================
-   ROTA: STATUS (LEITURA)
-============================ */
-
+// STATUS GLOBAL
 app.get("/oraculo/status", (req, res) => {
   return res.status(200).json(oraculoState);
 });
 
-/* ============================
-   START DO SERVIDOR
-============================ */
+// HEALTHCHECK (útil pro Render / keep-alive)
+app.get("/", (req, res) => {
+  res.send("ORÁCULO API ONLINE");
+});
 
-const PORT = 3000;
+/* =========================
+   START
+========================= */
 
 app.listen(PORT, () => {
-  console.log(`🔮 ORÁCULO API rodando em http://localhost:${PORT}`);
+  console.log(
+    `🔮 ORÁCULO API rodando na porta ${PORT}`
+  );
 });
