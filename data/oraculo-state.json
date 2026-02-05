@@ -1,49 +1,48 @@
 {
-  "updatedAt": 1770130322973,
+  "updatedAt": 1770245080797,
   "mesas": [
     {
       "mesaId": "block-8-213",
       "mesaNome": "Korean Roulette",
-      "status": "LOSS",
-      "rodada": 9,
-      "alvos": [],
-      "ultimoNumero": 19,
-      "timestamp": 1770130280209
+      "status": "GREEN",
+      "rodada": 7,
+      "alvos": [
+        22
+      ],
+      "ultimoNumero": 22,
+      "timestamp": 1770237530563
     },
     {
       "mesaId": "block-ezugi-481010",
       "mesaNome": "EZ Dealer Roulette Savanna",
-      "status": "GREEN",
-      "rodada": 5,
-      "alvos": [
-        26,
-        29
-      ],
-      "ultimoNumero": 29,
-      "timestamp": 1770130322973
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 30,
+      "timestamp": 1770241518429
     },
     {
       "mesaId": "block-8-201",
       "mesaNome": "Roulette 2 Extra Time",
-      "status": "LOSS",
-      "rodada": 9,
+      "status": "GREEN",
+      "rodada": 4,
       "alvos": [
-        24
+        26,
+        29
       ],
-      "ultimoNumero": 28,
-      "timestamp": 1770130209861
+      "ultimoNumero": 26,
+      "timestamp": 1770243671088
     },
     {
       "mesaId": "block-3-PeryaLightnRo001",
       "mesaNome": "Dynasty Lightning Roulette",
-      "status": "GREEN",
-      "rodada": 6,
+      "status": "LOSS",
+      "rodada": 9,
       "alvos": [
-        20,
         22
       ],
-      "ultimoNumero": 20,
-      "timestamp": 1770130189480
+      "ultimoNumero": 23,
+      "timestamp": 1770241388169
     },
     {
       "mesaId": "block-ezugi-481004",
@@ -51,50 +50,755 @@
       "status": "LOSS",
       "rodada": 9,
       "alvos": [
-        20,
-        22
-      ],
-      "ultimoNumero": 19,
-      "timestamp": 1770130088797
-    },
-    {
-      "mesaId": "block-ezugi-481003",
-      "mesaNome": "EZ Dealer Roulette Mandarin",
-      "status": "ATIVO",
-      "rodada": 5,
-      "alvos": [
         26,
         29
       ],
       "ultimoNumero": 18,
-      "timestamp": 1770130311770
+      "timestamp": 1770243600868
+    },
+    {
+      "mesaId": "block-ezugi-481003",
+      "mesaNome": "EZ Dealer Roulette Mandarin",
+      "status": "GREEN",
+      "rodada": 6,
+      "alvos": [
+        22
+      ],
+      "ultimoNumero": 22,
+      "timestamp": 1770239014433
     },
     {
       "mesaId": "block-8-221",
       "mesaNome": "Russian Roulette",
-      "status": "ATIVO",
-      "rodada": 6,
+      "status": "LOSS",
+      "rodada": 9,
       "alvos": [],
-      "ultimoNumero": 8,
-      "timestamp": 1770130321945
+      "ultimoNumero": 29,
+      "timestamp": 1770241562173
     },
     {
       "mesaId": "block-3-GoldVaultRo00001",
       "mesaNome": "Gold Vault Roulette",
-      "status": "ATIVO",
-      "rodada": 8,
+      "status": "LOSS",
+      "rodada": 9,
       "alvos": [],
-      "ultimoNumero": 10,
-      "timestamp": 1770130249637
+      "ultimoNumero": 17,
+      "timestamp": 1770240591334
     },
     {
       "mesaId": "block-3-RedDoorRoulette1",
       "mesaNome": "Red Door Roulette",
       "status": "ATIVO",
-      "rodada": 2,
+      "rodada": 8,
+      "alvos": [
+        12,
+        21,
+        32
+      ],
+      "ultimoNumero": 13,
+      "timestamp": 1770245038297
+    },
+    {
+      "mesaId": "block-ezugi-321000",
+      "mesaNome": "Casino Marina Roulette 1",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        20,
+        22
+      ],
+      "ultimoNumero": 30,
+      "timestamp": 1770241333182
+    },
+    {
+      "mesaId": "block-3-lkcbrbdckjxajdol",
+      "mesaNome": "Speed Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 8,
+      "timestamp": 1770245053470
+    },
+    {
+      "mesaId": "block-3-48z5pjps3ntvqc1b",
+      "mesaNome": "Auto-Roulette",
+      "status": "ATIVO",
+      "rodada": 8,
+      "alvos": [
+        24
+      ],
+      "ultimoNumero": 15,
+      "timestamp": 1770245054495
+    },
+    {
+      "mesaId": "block-8-206",
+      "mesaNome": "Roulette Macao",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        20,
+        22
+      ],
+      "ultimoNumero": 7,
+      "timestamp": 1770235175990
+    },
+    {
+      "mesaId": "block-3-PeryaRo000000001",
+      "mesaNome": "Dynasty Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        26,
+        29
+      ],
+      "ultimoNumero": 22,
+      "timestamp": 1770240034055
+    },
+    {
+      "mesaId": "block-ezugi-481008",
+      "mesaNome": "EZ Dealer Roulette Hindi",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        26,
+        29
+      ],
+      "ultimoNumero": 14,
+      "timestamp": 1770239779458
+    },
+    {
+      "mesaId": "block-ezugi-5001",
+      "mesaNome": "Auto Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 12,
+      "timestamp": 1770237331186
+    },
+    {
+      "mesaId": "block-ezugi-221002",
+      "mesaNome": "Speed Auto Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 12,
+      "timestamp": 1770237331193
+    },
+    {
+      "mesaId": "block-3-zosmk25g2f768o52",
+      "mesaNome": "Ruletka Live",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 3,
+      "timestamp": 1770243395444
+    },
+    {
+      "mesaId": "block-8-234",
+      "mesaNome": "Roulette Latina",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 17,
+      "timestamp": 1770238668379
+    },
+    {
+      "mesaId": "block-ezugi-481002",
+      "mesaNome": "EZ Dealer Roulette Japanese",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        24
+      ],
+      "ultimoNumero": 29,
+      "timestamp": 1770243223907
+    },
+    {
+      "mesaId": "block-8-224",
+      "mesaNome": "Turkish Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 7,
+      "timestamp": 1770238386279
+    },
+    {
+      "mesaId": "block-3-vctlz20yfnmp1ylr",
+      "mesaNome": "Roulette",
+      "status": "GREEN",
+      "rodada": 4,
+      "alvos": [
+        26,
+        29
+      ],
+      "ultimoNumero": 26,
+      "timestamp": 1770244388872
+    },
+    {
+      "mesaId": "block-ezugi-221000",
+      "mesaNome": "Speed Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 10,
+      "timestamp": 1770243812355
+    },
+    {
+      "mesaId": "block-ezugi-1000",
+      "mesaNome": "Italian Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 10,
+      "timestamp": 1770243812360
+    },
+    {
+      "mesaId": "block-8-12501",
+      "mesaNome": "Speed Roulette Latina",
+      "status": "GREEN",
+      "rodada": 7,
+      "alvos": [
+        12,
+        21,
+        32
+      ],
+      "ultimoNumero": 12,
+      "timestamp": 1770243521457
+    },
+    {
+      "mesaId": "block-3-wzg6kdkad1oe7m5k",
+      "mesaNome": "VIP Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 8,
+      "timestamp": 1770226210566
+    },
+    {
+      "mesaId": "block-ezugi-221007",
+      "mesaNome": "Cricket Auto Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 35,
+      "timestamp": 1770244048153
+    },
+    {
+      "mesaId": "block-8-210",
+      "mesaNome": "Auto Mega Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        24
+      ],
+      "ultimoNumero": 30,
+      "timestamp": 1770244244442
+    },
+    {
+      "mesaId": "block-ezugi-411000",
+      "mesaNome": "Spanish Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        26,
+        29
+      ],
+      "ultimoNumero": 10,
+      "timestamp": 1770238148244
+    },
+    {
+      "mesaId": "block-ezugi-221005",
+      "mesaNome": "Namaste Roulette",
+      "status": "GREEN",
+      "rodada": 6,
+      "alvos": [
+        26,
+        29
+      ],
+      "ultimoNumero": 29,
+      "timestamp": 1770241517410
+    },
+    {
+      "mesaId": "block-ezugi-221003",
+      "mesaNome": "Diamond Roulette",
+      "status": "GREEN",
+      "rodada": 6,
+      "alvos": [
+        26,
+        29
+      ],
+      "ultimoNumero": 29,
+      "timestamp": 1770241517417
+    },
+    {
+      "mesaId": "block-8-951",
+      "mesaNome": "Indonesian Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 34,
+      "timestamp": 1770232851668
+    },
+    {
+      "mesaId": "block-3-SpeedAutoRo00001",
+      "mesaNome": "Speed Auto Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 18,
+      "timestamp": 1770243042620
+    },
+    {
+      "mesaId": "block-8-223",
+      "mesaNome": "Roulette Italia Tricolore",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        20,
+        22
+      ],
+      "ultimoNumero": 5,
+      "timestamp": 1770241798224
+    },
+    {
+      "mesaId": "block-3-XxxtremeLigh0001",
+      "mesaNome": "XXXtreme Lightning Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        20,
+        22
+      ],
+      "ultimoNumero": 20,
+      "timestamp": 1770238964588
+    },
+    {
+      "mesaId": "block-8-262",
+      "mesaNome": "Vietnamese Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 16,
+      "timestamp": 1770244808654
+    },
+    {
+      "mesaId": "block-ezugi-221004",
+      "mesaNome": "Prestige Auto Roulette",
+      "status": "LOSS",
+      "rodada": 9,
       "alvos": [],
       "ultimoNumero": 24,
-      "timestamp": 1770130262884
+      "timestamp": 1770241130693
+    },
+    {
+      "mesaId": "block-ezugi-611007",
+      "mesaNome": "VIP Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        26,
+        29
+      ],
+      "ultimoNumero": 12,
+      "timestamp": 1770244867618
+    },
+    {
+      "mesaId": "block-ezugi-481001",
+      "mesaNome": "EZ Dealer Roulette Thai",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 30,
+      "timestamp": 1770240191720
+    },
+    {
+      "mesaId": "block-8-2901",
+      "mesaNome": "Mega Roulette 3000",
+      "status": "GREEN",
+      "rodada": 7,
+      "alvos": [
+        12,
+        21,
+        32
+      ],
+      "ultimoNumero": 32,
+      "timestamp": 1770242372710
+    },
+    {
+      "mesaId": "block-8-545",
+      "mesaNome": "VIP Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 7,
+      "timestamp": 1770243807271
+    },
+    {
+      "mesaId": "block-8-237",
+      "mesaNome": "Brazilian Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 3,
+      "timestamp": 1770243183004
+    },
+    {
+      "mesaId": "block-8-225",
+      "mesaNome": "Auto Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 6,
+      "timestamp": 1770244988588
+    },
+    {
+      "mesaId": "block-8-204",
+      "mesaNome": "Mega Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 22,
+      "timestamp": 1770244607185
+    },
+    {
+      "mesaId": "block-8-222",
+      "mesaNome": "German Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        22
+      ],
+      "ultimoNumero": 13,
+      "timestamp": 1770242837673
+    },
+    {
+      "mesaId": "block-8-287",
+      "mesaNome": "Brazilian Mega Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 36,
+      "timestamp": 1770245007879
+    },
+    {
+      "mesaId": "block-ezugi-241000",
+      "mesaNome": "Roleta da Sorte",
+      "status": "GREEN",
+      "rodada": 8,
+      "alvos": [
+        20,
+        22
+      ],
+      "ultimoNumero": 20,
+      "timestamp": 1770238976822
+    },
+    {
+      "mesaId": "block-8-205",
+      "mesaNome": "Speed Roulette 2",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        26,
+        29
+      ],
+      "ultimoNumero": 27,
+      "timestamp": 1770244279061
+    },
+    {
+      "mesaId": "block-8-266",
+      "mesaNome": "VIP Auto Roulette",
+      "status": "ATIVO",
+      "rodada": 8,
+      "alvos": [
+        20,
+        22
+      ],
+      "ultimoNumero": 32,
+      "timestamp": 1770245073706
+    },
+    {
+      "mesaId": "block-ezugi-481006",
+      "mesaNome": "EZ Dealer Roulette Turkish",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 1,
+      "timestamp": 1770243387302
+    },
+    {
+      "mesaId": "block-8-203",
+      "mesaNome": "Speed Roulette 1",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 17,
+      "timestamp": 1770244241394
+    },
+    {
+      "mesaId": "block-ezugi-481000",
+      "mesaNome": "EZ Dealer Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 23,
+      "timestamp": 1770241797199
+    },
+    {
+      "mesaId": "block-8-261",
+      "mesaNome": "Thai Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 4,
+      "timestamp": 1770227565675
+    },
+    {
+      "mesaId": "block-ezugi-481007",
+      "mesaNome": "EZ Dealer Roulette Nederlands",
+      "status": "GREEN",
+      "rodada": 6,
+      "alvos": [
+        12,
+        21,
+        32
+      ],
+      "ultimoNumero": 12,
+      "timestamp": 1770241094056
+    },
+    {
+      "mesaId": "block-ezugi-431000",
+      "mesaNome": "Ruleta del Sol",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 32,
+      "timestamp": 1770232377672
+    },
+    {
+      "mesaId": "block-8-233",
+      "mesaNome": "Romanian Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 22,
+      "timestamp": 1770243999360
+    },
+    {
+      "mesaId": "block-8-230",
+      "mesaNome": "Roulette 3",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        26,
+        29
+      ],
+      "ultimoNumero": 31,
+      "timestamp": 1770242092028
+    },
+    {
+      "mesaId": "block-3-pnkk4iuchw7blb2p",
+      "mesaNome": "Dragonara Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 20,
+      "timestamp": 1770240198824
+    },
+    {
+      "mesaId": "block-3-01rb77cq1gtenhmo",
+      "mesaNome": "Auto-Roulette VIP",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        26,
+        29
+      ],
+      "ultimoNumero": 9,
+      "timestamp": 1770243644615
+    },
+    {
+      "mesaId": "block-ezugi-221009",
+      "mesaNome": "Football Auto Roulette",
+      "status": "ATIVO",
+      "rodada": 1,
+      "alvos": [],
+      "ultimoNumero": 24,
+      "timestamp": 1770245080797
+    },
+    {
+      "mesaId": "block-3-LightningTable01",
+      "mesaNome": "Lightning Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        24
+      ],
+      "ultimoNumero": 21,
+      "timestamp": 1770237776690
+    },
+    {
+      "mesaId": "block-ezugi-611000",
+      "mesaNome": "Portomaso Roulette 2",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 2,
+      "timestamp": 1770240244603
+    },
+    {
+      "mesaId": "block-ezugi-611003",
+      "mesaNome": "Oracle 360 Roulette",
+      "status": "GREEN",
+      "rodada": 8,
+      "alvos": [
+        20,
+        22
+      ],
+      "ultimoNumero": 22,
+      "timestamp": 1770234917909
+    },
+    {
+      "mesaId": "block-8-211a1",
+      "mesaNome": "Lucky 6 Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        24
+      ],
+      "ultimoNumero": 19,
+      "timestamp": 1770238726426
+    },
+    {
+      "mesaId": "block-3-7nyiaws9tgqrzaz3",
+      "mesaNome": "Football Studio Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 4,
+      "timestamp": 1770244910284
+    },
+    {
+      "mesaId": "block-8-236",
+      "mesaNome": "Stake Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        20,
+        22
+      ],
+      "ultimoNumero": 28,
+      "timestamp": 1770241717970
+    },
+    {
+      "mesaId": "block-8-226",
+      "mesaNome": "Speed Auto Roulette",
+      "status": "GREEN",
+      "rodada": 6,
+      "alvos": [
+        26,
+        29
+      ],
+      "ultimoNumero": 29,
+      "timestamp": 1770244075630
+    },
+    {
+      "mesaId": "block-8-28401",
+      "mesaNome": "French Roulette la Partage",
+      "status": "GREEN",
+      "rodada": 8,
+      "alvos": [
+        2,
+        12,
+        20,
+        21,
+        22,
+        32
+      ],
+      "ultimoNumero": 32,
+      "timestamp": 1770243242232
+    },
+    {
+      "mesaId": "block-ezugi-221008",
+      "mesaNome": "Skyline Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 11,
+      "timestamp": 1770239681736
+    },
+    {
+      "mesaId": "block-ezugi-321001",
+      "mesaNome": "Casino Marina Roulette 2",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 16,
+      "timestamp": 1770242790946
+    },
+    {
+      "mesaId": "block-8-292",
+      "mesaNome": "Immersive Roulette Deluxe",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        22
+      ],
+      "ultimoNumero": 34,
+      "timestamp": 1770231091650
+    },
+    {
+      "mesaId": "block-3-mtnmxyvdxceqmllz",
+      "mesaNome": "Suomalainen Ruletti",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        26,
+        29
+      ],
+      "ultimoNumero": 15,
+      "timestamp": 1770239688837
+    },
+    {
+      "mesaId": "block-ezugi-611001",
+      "mesaNome": "Oracle Real Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 18,
+      "timestamp": 1770237596616
+    },
+    {
+      "mesaId": "block-3-7x0b1tgh7agmf6hv",
+      "mesaNome": "Immersive Roulette",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [
+        26,
+        29
+      ],
+      "ultimoNumero": 35,
+      "timestamp": 1770219497850
+    },
+    {
+      "mesaId": "block-8-208",
+      "mesaNome": "Turkish Mega Roulette",
+      "status": "GREEN",
+      "rodada": 4,
+      "alvos": [
+        20,
+        22
+      ],
+      "ultimoNumero": 22,
+      "timestamp": 1770242973425
+    },
+    {
+      "mesaId": "block-ezugi-481009",
+      "mesaNome": "EZ Dealer Roulette Latina",
+      "status": "LOSS",
+      "rodada": 9,
+      "alvos": [],
+      "ultimoNumero": 21,
+      "timestamp": 1770242822458
     }
   ]
 }

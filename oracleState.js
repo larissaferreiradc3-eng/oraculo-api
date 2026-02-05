@@ -2,10 +2,10 @@
 // Estado central do Oráculo com controle de rodada
 
 const state = {
-  estado: 'IDLE',
+  estado: "IDLE", // IDLE | EXECUTANDO
   mesa: null,
   rodada: 0,
-  mensagem: 'Aguardando oportunidade',
+  mensagem: "Aguardando oportunidade",
   updatedAt: new Date().toISOString()
 };
 
@@ -14,10 +14,18 @@ export function getState() {
 }
 
 export function resetState() {
-  state.estado = 'IDLE';
+  state.estado = "IDLE";
   state.mesa = null;
   state.rodada = 0;
-  state.mensagem = 'Aguardando oportunidade';
+  state.mensagem = "Aguardando oportunidade";
+  state.updatedAt = new Date().toISOString();
+}
+
+export function startExecution(mesa) {
+  state.estado = "EXECUTANDO";
+  state.mesa = mesa;
+  state.rodada = 1;
+  state.mensagem = "Executando sinal";
   state.updatedAt = new Date().toISOString();
 }
 

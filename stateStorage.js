@@ -1,84 +1,48 @@
-// oraculo-api/stateStorage.js
-// RESPONSÁVEL POR MANTER O ESTADO DO ORÁCULO PARA A INTERFACE
+// stateStorage.js
+// Persistência do estado do Oráculo no disco (Render Safe)
 
-// ===============================
-// STATE EM MEMÓRIA
-// ===============================
+import fs from "fs";
+import path from "path";
 
-// mesas ATIVAS (janela 5–8)
-const activeMesas = new Map();
+const DATA_DIR = path.resolve("./data");
+const STATE_FILE = path.join(DATA_DIR, "oraculo-state.json");
 
-// histórico encerrado (opcional, útil pra debug / log)
-const closedMesas = [];
+export function ensureStorage() {
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
+  }
 
-// ===============================
-// ATIVO (UPSERT)
-// ===============================
-
-export function upsertActiveMesa(payload) {
-  const {
-    mesaId,
-    mesaNome,
-    status,
-    rodada,
-    alvos,
-    ultimoNumero,
-    timestamp
-  } = payload;
-
-  activeMesas.set(mesaId, {
-    mesaId,
-    mesaNome,
-    status,          // ATIVO
-    rodada,
-    alvos,
-    ultimoNumero,
-    timestamp
-  });
+  if (!fs.existsSync(STATE_FILE)) {
+    fs.writeFileSync(
+      STATE_FILE,
+      JSON.stringify(
+        {
+          updatedAt: Date.now(),
+          mesas: []
+        },
+        null,
+        2
+      )
+    );
+  }
 }
 
-// ===============================
-// ENCERRAMENTO (GREEN / LOSS)
-// ===============================
-
-export function closeMesa(payload) {
-  const {
-    mesaId,
-    mesaNome,
-    status,          // GREEN | LOSS
-    rodada,
-    alvos,
-    ultimoNumero,
-    timestamp
-  } = payload;
-
-  // remove da lista ativa
-  activeMesas.delete(mesaId);
-
-  // guarda no histórico (opcional)
-  closedMesas.push({
-    mesaId,
-    mesaNome,
-    status,
-    rodada,
-    alvos,
-    ultimoNumero,
-    timestamp
-  });
+export function loadState() {
+  try {
+    const raw = fs.readFileSync(STATE_FILE, "utf-8");
+    return JSON.parse(raw);
+  } catch {
+    return {
+      updatedAt: Date.now(),
+      mesas: []
+    };
+  }
 }
 
-// ===============================
-// EXPOSIÇÃO PARA A INTERFACE
-// ===============================
-
-export function getOracleState() {
-  return {
-    updatedAt: Date.now(),
-
-    // somente mesas ATIVAS aparecem na interface
-    mesas: Array.from(activeMesas.values())
-
-    // se quiser depois:
-    // encerradas: closedMesas
-  };
+export function saveState(state) {
+  try {
+    fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
+  } catch (err) {
+    console.error("❌ ERRO AO SALVAR ESTADO:", err.message);
+  }
 }

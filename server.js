@@ -1,67 +1,23 @@
-// ORÁCULO API — VERSÃO COM PERSISTÊNCIA (RENDER FREE SAFE)
-// Mantém estado mesmo quando o Render dorme/reinicia
+// server.js
+// ORÁCULO API — VERSÃO FINAL (PERSISTENTE + ENGINE VORTEX 27)
+// Mantém estado no disco e aplica lógica automática do VORTEX 27 por mesa
 
 import express from "express";
 import cors from "cors";
-import fs from "fs";
-import path from "path";
+
+import {
+  ensureStorage,
+  loadState,
+  saveState
+} from "./stateStorage.js";
+
+import { processCollectorEvent } from "./vortex27Engine.js";
 
 /* =========================
    CONFIG
 ========================= */
 
 const PORT = process.env.PORT || 3000;
-
-// arquivo de persistência (fica no disco do Render)
-const DATA_DIR = path.resolve("./data");
-const STATE_FILE = path.join(DATA_DIR, "oraculo-state.json");
-
-/* =========================
-   HELPERS DE PERSISTÊNCIA
-========================= */
-
-function ensureStorage() {
-  if (!fs.existsSync(DATA_DIR)) {
-    fs.mkdirSync(DATA_DIR, { recursive: true });
-  }
-
-  if (!fs.existsSync(STATE_FILE)) {
-    fs.writeFileSync(
-      STATE_FILE,
-      JSON.stringify(
-        {
-          updatedAt: Date.now(),
-          mesas: []
-        },
-        null,
-        2
-      )
-    );
-  }
-}
-
-function loadState() {
-  try {
-    const raw = fs.readFileSync(STATE_FILE, "utf-8");
-    return JSON.parse(raw);
-  } catch {
-    return {
-      updatedAt: Date.now(),
-      mesas: []
-    };
-  }
-}
-
-function saveState(state) {
-  try {
-    fs.writeFileSync(
-      STATE_FILE,
-      JSON.stringify(state, null, 2)
-    );
-  } catch (err) {
-    console.error("❌ ERRO AO SALVAR ESTADO:", err.message);
-  }
-}
 
 /* =========================
    BOOT
@@ -72,9 +28,7 @@ ensureStorage();
 let oraculoState = loadState();
 
 console.log("🔁 Estado carregado do disco:");
-console.log(
-  `→ mesas: ${oraculoState.mesas.length}`
-);
+console.log(`→ mesas: ${oraculoState.mesas.length}`);
 
 /* =========================
    APP
@@ -89,57 +43,36 @@ app.use(express.json());
    ROTAS
 ========================= */
 
-// RECEBE EVENTOS DO COLETOR
+// RECEBE EVENTOS DO COLETOR (somente mesaId, mesaNome, ultimoNumero)
 app.post("/oraculo/evento", (req, res) => {
-  const body = req.body || {};
+  try {
+    const body = req.body || {};
 
-  const {
-    mesaId,
-    mesaNome,
-    status,
-    rodada,
-    alvos,
-    ultimoNumero
-  } = body;
+    const { mesaId, mesaNome, ultimoNumero } = body;
 
-  if (!mesaId) {
-    console.error("❌ Evento rejeitado: mesaId ausente");
-    return res
-      .status(400)
-      .json({ error: "mesaId é obrigatório" });
+    if (!mesaId || ultimoNumero === undefined || ultimoNumero === null) {
+      console.error("❌ Evento rejeitado: payload inválido:", body);
+      return res.status(400).json({
+        error: "mesaId e ultimoNumero são obrigatórios"
+      });
+    }
+
+    // aplica engine VORTEX 27 e atualiza estado
+    oraculoState = processCollectorEvent(oraculoState, {
+      mesaId,
+      mesaNome: mesaNome ?? null,
+      ultimoNumero: Number(ultimoNumero),
+      timestamp: Date.now()
+    });
+
+    // salva persistente
+    saveState(oraculoState);
+
+    return res.status(200).json({ ok: true });
+  } catch (err) {
+    console.error("❌ Erro interno ao processar evento:", err.message);
+    return res.status(500).json({ error: "Erro interno" });
   }
-
-  const index = oraculoState.mesas.findIndex(
-    m => m.mesaId === mesaId
-  );
-
-  const mesaAtualizada = {
-    mesaId,
-    mesaNome: mesaNome ?? null,
-    status: status ?? "DESCONHECIDO",
-    rodada: rodada ?? null,
-    alvos: Array.isArray(alvos) ? alvos : [],
-    ultimoNumero: ultimoNumero ?? null,
-    timestamp: Date.now()
-  };
-
-  if (index >= 0) {
-    oraculoState.mesas[index] = mesaAtualizada;
-  } else {
-    oraculoState.mesas.push(mesaAtualizada);
-  }
-
-  oraculoState.updatedAt = Date.now();
-
-  saveState(oraculoState);
-
-  console.log(
-    "📥 EVENTO SALVO:",
-    mesaAtualizada.mesaId,
-    mesaAtualizada.status
-  );
-
-  return res.status(200).json({ ok: true });
 });
 
 // STATUS GLOBAL
@@ -147,7 +80,7 @@ app.get("/oraculo/status", (req, res) => {
   return res.status(200).json(oraculoState);
 });
 
-// HEALTHCHECK (útil pro Render / keep-alive)
+// HEALTHCHECK
 app.get("/", (req, res) => {
   res.send("ORÁCULO API ONLINE");
 });
@@ -157,7 +90,5 @@ app.get("/", (req, res) => {
 ========================= */
 
 app.listen(PORT, () => {
-  console.log(
-    `🔮 ORÁCULO API rodando na porta ${PORT}`
-  );
+  console.log(`🔮 ORÁCULO API rodando na porta ${PORT}`);
 });
