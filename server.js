@@ -1,29 +1,49 @@
 // server.js
-// ORÁCULO API — VERSÃO FINAL (CLOUDFLARE WRANGLER COMPATÍVEL)
-// CORS liberado + validação + status limpo
+// ORÁCULO API — VERSÃO FINAL (PERSISTENTE + ENGINE VORTEX 27)
+// Compatível com Render (Express + app.listen)
+// Mantém estado no disco e aplica lógica automática do VORTEX 27 por mesa
 
 import express from "express";
 import cors from "cors";
-import serverless from "serverless-http";
 
 import { ensureStorage, loadState, saveState } from "./stateStorage.js";
 import { processCollectorEvent } from "./vortex27Engine.js";
 
 /* =========================
-   BOOT
+   CONFIG
 ========================= */
 
-ensureStorage();
+const PORT = process.env.PORT || 10000;
 
-let oraculoState = loadState();
+/* =========================
+   BOOT SEGURO
+========================= */
 
-if (!oraculoState || !Array.isArray(oraculoState.mesas)) {
+let oraculoState = { updatedAt: Date.now(), mesas: [] };
+
+try {
+  ensureStorage();
+
+  const stateFromDisk = loadState();
+
+  if (stateFromDisk && Array.isArray(stateFromDisk.mesas)) {
+    oraculoState = stateFromDisk;
+  } else {
+    saveState(oraculoState);
+  }
+
+  console.log("🔁 Estado carregado do disco:");
+  console.log(`→ mesas: ${oraculoState.mesas.length}`);
+} catch (err) {
+  console.error("❌ Erro ao carregar estado do disco. Iniciando vazio:", err.message);
   oraculoState = { updatedAt: Date.now(), mesas: [] };
-  saveState(oraculoState);
-}
 
-console.log("🔁 Estado carregado do disco:");
-console.log(`→ mesas: ${oraculoState.mesas.length}`);
+  try {
+    saveState(oraculoState);
+  } catch (e) {
+    console.error("⚠️ Falha ao salvar estado inicial:", e.message);
+  }
+}
 
 /* =========================
    APP
@@ -32,7 +52,7 @@ console.log(`→ mesas: ${oraculoState.mesas.length}`);
 const app = express();
 
 /* =========================
-   CORS
+   CORS (LIBERA PARA OUTROS SITES)
 ========================= */
 
 app.use(
@@ -46,6 +66,18 @@ app.use(
 app.options("*", cors());
 
 app.use(express.json());
+
+/* =========================
+   PROTEÇÃO EXTRA (LOGA ERROS GERAIS)
+========================= */
+
+process.on("uncaughtException", (err) => {
+  console.error("🔥 uncaughtException:", err);
+});
+
+process.on("unhandledRejection", (err) => {
+  console.error("🔥 unhandledRejection:", err);
+});
 
 /* =========================
    HELPERS
@@ -70,12 +102,29 @@ function isValidNumero(n) {
    ROTAS
 ========================= */
 
+// HEALTHCHECK
+app.get("/health", (req, res) => {
+  return res.status(200).json({
+    ok: true,
+    service: "oraculo-api",
+    updatedAt: oraculoState.updatedAt,
+    totalMesas: oraculoState.mesas?.length ?? 0,
+  });
+});
+
+// HOME
+app.get("/", (req, res) => {
+  res.status(200).send("ORÁCULO API ONLINE");
+});
+
+// RECEBE EVENTOS DO COLETOR
 app.post("/oraculo/evento", (req, res) => {
   try {
     const body = req.body || {};
     const { mesaId, mesaNome, ultimoNumero } = body;
 
     if (!isValidMesaId(mesaId)) {
+      console.error("❌ Evento rejeitado: mesaId inválido:", body);
       return res.status(400).json({
         ok: false,
         error: "mesaId inválido",
@@ -84,6 +133,7 @@ app.post("/oraculo/evento", (req, res) => {
     }
 
     if (!isValidNumero(ultimoNumero)) {
+      console.error("❌ Evento rejeitado: ultimoNumero inválido:", body);
       return res.status(400).json({
         ok: false,
         error: "ultimoNumero inválido (precisa ser 0 a 36)",
@@ -98,10 +148,15 @@ app.post("/oraculo/evento", (req, res) => {
       timestamp: Date.now(),
     };
 
+    console.log("📥 EVENTO RECEBIDO:", evento);
+
+    // aplica engine
     oraculoState = processCollectorEvent(oraculoState, evento);
 
+    // atualiza timestamp global
     oraculoState.updatedAt = Date.now();
 
+    // salva persistente
     saveState(oraculoState);
 
     return res.status(200).json({
@@ -110,14 +165,17 @@ app.post("/oraculo/evento", (req, res) => {
       evento,
     });
   } catch (err) {
+    console.error("❌ Erro interno ao processar evento:", err);
+
     return res.status(500).json({
       ok: false,
-      error: "Erro interno",
+      error: "Erro interno ao processar evento",
       details: err.message,
     });
   }
 });
 
+// STATUS GLOBAL
 app.get("/oraculo/status", (req, res) => {
   try {
     if (!oraculoState || !Array.isArray(oraculoState.mesas)) {
@@ -128,10 +186,12 @@ app.get("/oraculo/status", (req, res) => {
     return res.status(200).json({
       ok: true,
       updatedAt: oraculoState.updatedAt,
-      mesas: oraculoState.mesas,
       totalMesas: oraculoState.mesas.length,
+      mesas: oraculoState.mesas,
     });
   } catch (err) {
+    console.error("❌ Erro ao retornar status:", err.message);
+
     return res.status(500).json({
       ok: false,
       error: "Erro ao retornar status",
@@ -140,6 +200,7 @@ app.get("/oraculo/status", (req, res) => {
   }
 });
 
+// LISTA RESUMIDA (DEBUG)
 app.get("/oraculo/mesas", (req, res) => {
   try {
     const mesas = (oraculoState.mesas || []).map((m) => ({
@@ -150,6 +211,7 @@ app.get("/oraculo/mesas", (req, res) => {
       ultimoNumero: m.ultimoNumero,
       score: m.score,
       alvos: m.alvos,
+      updatedAt: m.timestamp,
     }));
 
     return res.status(200).json({
@@ -158,13 +220,17 @@ app.get("/oraculo/mesas", (req, res) => {
       mesas,
     });
   } catch (err) {
+    console.error("❌ Erro ao listar mesas:", err.message);
     return res.status(500).json({ ok: false, error: err.message });
   }
 });
 
+// RESET (limpa tudo manualmente)
 app.post("/oraculo/reset", (req, res) => {
   oraculoState = { updatedAt: Date.now(), mesas: [] };
   saveState(oraculoState);
+
+  console.log("🧹 RESET aplicado: todas as mesas apagadas.");
 
   return res.status(200).json({
     ok: true,
@@ -172,23 +238,10 @@ app.post("/oraculo/reset", (req, res) => {
   });
 });
 
-app.get("/", (req, res) => {
-  res.status(200).send("ORÁCULO API ONLINE (WRANGLER)");
-});
-
-app.get("/health", (req, res) => {
-  res.status(200).json({
-    ok: true,
-    service: "oraculo-api",
-    updatedAt: oraculoState.updatedAt,
-    mesas: oraculoState.mesas.length,
-  });
-});
-
 /* =========================
-   EXPORT PARA WRANGLER
+   START
 ========================= */
 
-export default {
-  fetch: serverless(app),
-};
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🔮 ORÁCULO API rodando na porta ${PORT}`);
+});
