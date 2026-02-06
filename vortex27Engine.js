@@ -33,8 +33,8 @@ function cor(n) {
   if (n === 0) return "verde";
 
   const vermelhos = new Set([
-    1,3,5,7,9,12,14,16,18,
-    19,21,23,25,27,30,32,34,36
+    1, 3, 5, 7, 9, 12, 14, 16, 18,
+    19, 21, 23, 25, 27, 30, 32, 34, 36
   ]);
 
   return vermelhos.has(n) ? "vermelho" : "preto";
@@ -68,19 +68,19 @@ function gerarBasePorSoma(referencia) {
   const eixo = referencia + 2;
 
   const mapa = {
-    2:  [2,12,20,21,22,32],
-    4:  [2,12,20,21,22,32],
-    6:  [26,29],
-    8:  [26,29],
-    10: [20,22],
-    12: [12,21,32],
-    14: [12,21,32],
-    16: [26,29],
-    18: [20,22],
-    20: [20,22],
+    2:  [2, 12, 20, 21, 22, 32],
+    4:  [2, 12, 20, 21, 22, 32],
+    6:  [26, 29],
+    8:  [26, 29],
+    10: [20, 22],
+    12: [12, 21, 32],
+    14: [12, 21, 32],
+    16: [26, 29],
+    18: [20, 22],
+    20: [20, 22],
     22: [22],
     24: [24],
-    26: [26,29],
+    26: [26, 29],
     28: [28],
     30: [32]
   };
@@ -90,48 +90,47 @@ function gerarBasePorSoma(referencia) {
 
 /* ============================
    CONFLUÊNCIA: ESPELHOS / SUBSTITUIÇÕES
-   (resumo prático baseado na sua tabela)
 ============================ */
 
 function substituicoes(n) {
   const map = {
-    0: [11,22,33],
-    1: [0,10,11,22,33],
-    2: [1,3,11,20],
-    3: [2,4,12,13,24,31,35],
-    4: [3,5,13,14,25,36,30,33],
-    5: [4,6,14,15,26,22,31],
-    6: [5,7,15,16,27,14,23,32],
-    7: [6,8,16,17,28],
-    8: [7,9,17,18,29],
-    9: [8,10,18,19,26,35],
-    10:[9,11,19,20],
-    11:[10,12,20,22,33],
-    12:[11,13,21,22],
-    13:[12,14,23,24,31],
-    14:[13,15,24,25,34],
-    15:[14,16,25,26],
-    16:[15,17,32],
-    17:[16,18,34],
-    18:[17,19,36],
-    19:[18,20,33],
-    20:[19,21,16],
-    21:[20,22,2],
-    22:[21,23,11,33],
-    23:[22,24,32],
-    24:[23,25,12],
-    25:[24,26,15],
-    26:[25,27,29],
-    27:[26,28,13],
-    28:[27,29],
-    29:[28,30,26],
-    30:[29,31,26],
-    31:[30,32,13],
-    32:[31,33,16,23],
-    33:[32,34,11,22],
-    34:[33,35,14],
-    35:[34,36,17],
-    36:[35,18]
+    0: [11, 22, 33],
+    1: [0, 10, 11, 22, 33],
+    2: [1, 3, 11, 20],
+    3: [2, 4, 12, 13, 24, 31, 35],
+    4: [3, 5, 13, 14, 25, 36, 30, 33],
+    5: [4, 6, 14, 15, 26, 22, 31],
+    6: [5, 7, 15, 16, 27, 14, 23, 32],
+    7: [6, 8, 16, 17, 28],
+    8: [7, 9, 17, 18, 29],
+    9: [8, 10, 18, 19, 26, 35],
+    10: [9, 11, 19, 20],
+    11: [10, 12, 20, 22, 33],
+    12: [11, 13, 21, 22],
+    13: [12, 14, 23, 24, 31],
+    14: [13, 15, 24, 25, 34],
+    15: [14, 16, 25, 26],
+    16: [15, 17, 32],
+    17: [16, 18, 34],
+    18: [17, 19, 36],
+    19: [18, 20, 33],
+    20: [19, 21, 16],
+    21: [20, 22, 2],
+    22: [21, 23, 11, 33],
+    23: [22, 24, 32],
+    24: [23, 25, 12],
+    25: [24, 26, 15],
+    26: [25, 27, 29],
+    27: [26, 28, 13],
+    28: [27, 29],
+    29: [28, 30, 26],
+    30: [29, 31, 26],
+    31: [30, 32, 13],
+    32: [31, 33, 16, 23],
+    33: [32, 34, 11, 22],
+    34: [33, 35, 14],
+    35: [34, 36, 17],
+    36: [35, 18]
   };
 
   return map[n] ?? [];
@@ -148,7 +147,6 @@ function calcularScoreConfluencia(historico, candidatos) {
 
   let score = 0;
 
-  // Frequência por cor / coluna / dúzia nos últimos 5
   const freqCor = {};
   const freqDuzia = {};
   const freqColuna = {};
@@ -163,7 +161,6 @@ function calcularScoreConfluencia(historico, candidatos) {
     if (col) freqColuna[col] = (freqColuna[col] ?? 0) + 1;
   }
 
-  // Para cada candidato, soma pontos se ele cair em categorias quentes
   for (const cand of candidatos) {
     const c = cor(cand);
     const d = duzia(cand);
@@ -174,8 +171,7 @@ function calcularScoreConfluencia(historico, candidatos) {
     if (col) score += (freqColuna[col] ?? 0) * 3;
   }
 
-  // normaliza pra 0-100
-  const maxPossivel = candidatos.length * (5 * 4 + 5 * 3 + 5 * 3); // 50 por alvo
+  const maxPossivel = candidatos.length * (5 * 4 + 5 * 3 + 5 * 3);
   let final = Math.round((score / maxPossivel) * 100);
 
   if (final > 100) final = 100;
@@ -192,30 +188,24 @@ function gerarAlvosPorConfluencia(referencia, historico) {
   const baseSoma = gerarBasePorSoma(referencia);
   const candidatos = new Set();
 
-  // 1) Base soma (pilar principal)
   for (const n of baseSoma) candidatos.add(n);
 
-  // 2) Substituições dos números base
   for (const b of baseSoma) {
     const subs = substituicoes(b);
     for (const s of subs) candidatos.add(s);
   }
 
-  // 3) Substituições da referência também
   const subsRef = substituicoes(referencia);
   for (const s of subsRef) candidatos.add(s);
 
-  // Remove inválidos
   candidatos.delete(null);
   candidatos.delete(undefined);
 
   // Remove 27 (não pode ser alvo)
   candidatos.delete(27);
 
-  // Limpa números fora
   const lista = [...candidatos].filter(n => Number.isInteger(n) && n >= 0 && n <= 36);
 
-  // Ordena por relevância: primeiro os mais repetidos no histórico
   const freq = {};
   for (const n of historico) {
     freq[n] = (freq[n] ?? 0) + 1;
@@ -223,28 +213,41 @@ function gerarAlvosPorConfluencia(referencia, historico) {
 
   lista.sort((a, b) => (freq[b] ?? 0) - (freq[a] ?? 0));
 
-  // limita a 6
   let final = lista.slice(0, MAX_ALVOS);
 
-  // Expande gêmeos 11/22/33 se tiver algum deles
   final = expandirGemeos(final);
 
-  // garante limite 6
   final = final.slice(0, MAX_ALVOS);
 
-  // regra: não permitir 0 sozinho
   if (final.length === 1 && final[0] === 0) {
     return [];
   }
 
-  // regra: mínimo 2 alvos
   if (final.length < 2) return [];
 
   return final;
 }
 
 /* ============================
-   ESTADO GLOBAL
+   RESET CICLO
+============================ */
+
+function resetarCiclo(mesa) {
+  mesa.status = "IDLE";
+  mesa.rodada = 0;
+  mesa.alvos = [];
+  mesa.score = 0;
+
+  mesa.vortex27.ativo = false;
+  mesa.vortex27.referencia = null;
+  mesa.vortex27.gatilhoNumero = null;
+  mesa.vortex27.gatilhoTimestamp = null;
+  mesa.vortex27.score = 0;
+  mesa.vortex27.entradaEnviada = false;
+}
+
+/* ============================
+   ENGINE PRINCIPAL
 ============================ */
 
 export function processCollectorEvent(oraculoState, evento) {
@@ -261,6 +264,7 @@ export function processCollectorEvent(oraculoState, evento) {
       status: "IDLE",
       rodada: 0,
       alvos: [],
+      score: 0,
       ultimoNumero: ultimoNumero,
       timestamp: timestamp,
       history: [],
@@ -277,7 +281,6 @@ export function processCollectorEvent(oraculoState, evento) {
     oraculoState.mesas.push(mesa);
   }
 
-  // atualiza nome caso venha novo
   if (mesaNome) mesa.mesaNome = mesaNome;
 
   // histórico
@@ -290,12 +293,11 @@ export function processCollectorEvent(oraculoState, evento) {
   const vortex = mesa.vortex27;
 
   /* ============================
-     SE MESA JÁ FINALIZOU (GREEN/LOSS)
-     NÃO REABRE
+     SE MESA ESTAVA FINALIZADA, LIBERA PRA NOVO CICLO
   ============================ */
 
-  if (mesa.status === "GREEN" || mesa.status === "LOSS") {
-    return oraculoState;
+  if (mesa.status === "GREEN" || mesa.status === "LOSS" || mesa.status === "CANCELADO") {
+    resetarCiclo(mesa);
   }
 
   /* ============================
@@ -304,7 +306,10 @@ export function processCollectorEvent(oraculoState, evento) {
 
   if (!vortex.ativo && ultimoNumero === 27) {
     vortex.ativo = true;
+
+    // número imediatamente anterior ao 27
     vortex.referencia = mesa.history[1] ?? null;
+
     vortex.gatilhoNumero = 27;
     vortex.gatilhoTimestamp = timestamp;
     vortex.score = 0;
@@ -313,18 +318,20 @@ export function processCollectorEvent(oraculoState, evento) {
     mesa.status = "OBSERVANDO";
     mesa.rodada = 0;
     mesa.alvos = [];
+    mesa.score = 0;
 
     return oraculoState;
   }
 
   /* ============================
-     SE NÃO ESTÁ EM CICLO, IGNORA
+     SE NÃO ESTÁ EM CICLO, MANTÉM IDLE
   ============================ */
 
   if (!vortex.ativo) {
     mesa.status = "IDLE";
     mesa.rodada = 0;
     mesa.alvos = [];
+    mesa.score = 0;
     return oraculoState;
   }
 
@@ -335,16 +342,27 @@ export function processCollectorEvent(oraculoState, evento) {
   mesa.rodada += 1;
 
   /* ============================
+     AINDA OBSERVANDO
+  ============================ */
+
+  if (mesa.rodada < RODADA_ENTRADA) {
+    mesa.status = "OBSERVANDO";
+    return oraculoState;
+  }
+
+  /* ============================
      GERA ALVOS NA RODADA 4
   ============================ */
 
   if (mesa.rodada === RODADA_ENTRADA && !vortex.entradaEnviada) {
     const referencia = vortex.referencia;
 
-    if (!referencia || referencia === 0) {
+    // se referencia for null (não existe número anterior), cancela
+    if (referencia === null || referencia === undefined) {
       mesa.status = "CANCELADO";
       vortex.ativo = false;
       mesa.alvos = [];
+      mesa.score = 0;
       return oraculoState;
     }
 
@@ -354,18 +372,20 @@ export function processCollectorEvent(oraculoState, evento) {
       mesa.status = "CANCELADO";
       vortex.ativo = false;
       mesa.alvos = [];
+      mesa.score = 0;
       return oraculoState;
     }
 
     const score = calcularScoreConfluencia(mesa.history, alvos);
 
     vortex.score = score;
+    mesa.score = score;
 
-    // só ativa se score alto
     if (score < SCORE_MINIMO) {
       mesa.status = "CANCELADO";
       vortex.ativo = false;
       mesa.alvos = [];
+      mesa.score = 0;
       return oraculoState;
     }
 
@@ -377,17 +397,7 @@ export function processCollectorEvent(oraculoState, evento) {
   }
 
   /* ============================
-     SE AINDA NÃO CHEGOU NA RODADA 4
-  ============================ */
-
-  if (mesa.rodada < RODADA_ENTRADA) {
-    mesa.status = "OBSERVANDO";
-    return oraculoState;
-  }
-
-  /* ============================
      GREEN DETECTADO
-     (0 pode ser green se estiver nos alvos)
   ============================ */
 
   if (mesa.status === "ATIVO" && mesa.alvos.includes(ultimoNumero)) {
@@ -395,7 +405,7 @@ export function processCollectorEvent(oraculoState, evento) {
     mesa.numeroResolucao = ultimoNumero;
     mesa.rodadaResolucao = mesa.rodada;
 
-    // encerra ciclo
+    // encerra ciclo mas permite novos no futuro
     vortex.ativo = false;
     vortex.referencia = null;
 
@@ -411,18 +421,10 @@ export function processCollectorEvent(oraculoState, evento) {
     mesa.numeroResolucao = ultimoNumero;
     mesa.rodadaResolucao = mesa.rodada;
 
-    // encerra ciclo
+    // encerra ciclo mas permite novos no futuro
     vortex.ativo = false;
     vortex.referencia = null;
 
-    return oraculoState;
-  }
-
-  /* ============================
-     MANTÉM ATIVO SEM SPAM
-  ============================ */
-
-  if (mesa.status === "ATIVO") {
     return oraculoState;
   }
 
