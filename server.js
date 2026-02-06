@@ -1,16 +1,11 @@
 // server.js
-// ORÁCULO API — FINAL (PERSISTENTE + ENGINE VORTEX27 + SCORE + LIMPEZA)
+// ORÁCULO API — VERSÃO FINAL (PERSISTENTE + ENGINE VORTEX 27)
+// Mantém estado no disco e aplica lógica automática do VORTEX 27 por mesa
 
 import express from "express";
 import cors from "cors";
 
-import {
-  ensureStorage,
-  loadState,
-  saveState,
-  cleanupOldMesas
-} from "./stateStorage.js";
-
+import { ensureStorage, loadState, saveState } from "./stateStorage.js";
 import { processCollectorEvent } from "./vortex27Engine.js";
 
 /* =========================
@@ -18,9 +13,6 @@ import { processCollectorEvent } from "./vortex27Engine.js";
 ========================= */
 
 const PORT = process.env.PORT || 3000;
-
-// limpa mesas antigas após X minutos sem atualização
-const CLEANUP_INTERVAL = 2 * 60 * 1000; // 2 min
 
 /* =========================
    BOOT
@@ -46,11 +38,10 @@ app.use(express.json());
    ROTAS
 ========================= */
 
-// RECEBE EVENTOS DO COLETOR
+// RECEBE EVENTOS DO COLETOR (somente mesaId, mesaNome, ultimoNumero)
 app.post("/oraculo/evento", (req, res) => {
   try {
     const body = req.body || {};
-
     const { mesaId, mesaNome, ultimoNumero } = body;
 
     if (!mesaId || ultimoNumero === undefined || ultimoNumero === null) {
@@ -60,7 +51,7 @@ app.post("/oraculo/evento", (req, res) => {
       });
     }
 
-    // aplica engine VORTEX 27
+    // aplica engine VORTEX 27 e atualiza estado
     oraculoState = processCollectorEvent(oraculoState, {
       mesaId,
       mesaNome: mesaNome ?? null,
@@ -83,31 +74,18 @@ app.get("/oraculo/status", (req, res) => {
   return res.status(200).json(oraculoState);
 });
 
+// RESET (limpa tudo manualmente se quiser)
+app.post("/oraculo/reset", (req, res) => {
+  oraculoState = { updatedAt: Date.now(), mesas: [] };
+  saveState(oraculoState);
+  console.log("🧹 RESET aplicado: todas as mesas apagadas.");
+  return res.status(200).json({ ok: true });
+});
+
 // HEALTHCHECK
 app.get("/", (req, res) => {
   res.send("ORÁCULO API ONLINE");
 });
-
-/* =========================
-   LIMPEZA AUTOMÁTICA
-========================= */
-
-setInterval(() => {
-  try {
-    const before = oraculoState.mesas.length;
-
-    oraculoState = cleanupOldMesas(oraculoState);
-
-    const after = oraculoState.mesas.length;
-
-    if (before !== after) {
-      console.log(`🧹 Cleanup: mesas removidas ${before - after}`);
-      saveState(oraculoState);
-    }
-  } catch (err) {
-    console.log("⚠️ Erro no cleanup:", err.message);
-  }
-}, CLEANUP_INTERVAL);
 
 /* =========================
    START
