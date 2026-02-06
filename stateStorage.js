@@ -1,45 +1,67 @@
-// stateStorage.js
-// Persistência simples em disco (Render-safe)
-
 import fs from "fs";
 import path from "path";
 
-const DB_FOLDER = path.resolve("./database");
-const DB_FILE = path.resolve("./database/oraculoState.json");
+const DATA_DIR = path.resolve("./data");
+const STATE_FILE = path.join(DATA_DIR, "oraculo-state.json");
+
+// TTL de mesa sem atualizar
+const TTL_MINUTES = 15;
+const TTL_MS = TTL_MINUTES * 60 * 1000;
 
 export function ensureStorage() {
-  if (!fs.existsSync(DB_FOLDER)) {
-    fs.mkdirSync(DB_FOLDER);
+  if (!fs.existsSync(DATA_DIR)) {
+    fs.mkdirSync(DATA_DIR, { recursive: true });
   }
 
-  if (!fs.existsSync(DB_FILE)) {
+  if (!fs.existsSync(STATE_FILE)) {
     fs.writeFileSync(
-      DB_FILE,
-      JSON.stringify({ updatedAt: Date.now(), mesas: [] }, null, 2)
+      STATE_FILE,
+      JSON.stringify(
+        {
+          updatedAt: Date.now(),
+          mesas: []
+        },
+        null,
+        2
+      )
     );
   }
 }
 
 export function loadState() {
   try {
-    const raw = fs.readFileSync(DB_FILE, "utf-8");
-    const data = JSON.parse(raw);
-
-    if (!data || !Array.isArray(data.mesas)) {
-      return { updatedAt: Date.now(), mesas: [] };
-    }
-
-    return data;
+    const raw = fs.readFileSync(STATE_FILE, "utf-8");
+    return JSON.parse(raw);
   } catch {
-    return { updatedAt: Date.now(), mesas: [] };
+    return {
+      updatedAt: Date.now(),
+      mesas: []
+    };
   }
 }
 
 export function saveState(state) {
   try {
-    state.updatedAt = Date.now();
-    fs.writeFileSync(DB_FILE, JSON.stringify(state, null, 2));
+    fs.writeFileSync(STATE_FILE, JSON.stringify(state, null, 2));
   } catch (err) {
-    console.error("❌ Erro ao salvar estado:", err.message);
+    console.error("❌ ERRO AO SALVAR ESTADO:", err.message);
   }
+}
+
+/* =========================
+   CLEANUP (LIMPA MESAS VELHAS)
+========================= */
+
+export function cleanupOldMesas(state) {
+  const now = Date.now();
+
+  const mesasFiltradas = state.mesas.filter((m) => {
+    if (!m.timestamp) return false;
+    return now - m.timestamp < TTL_MS;
+  });
+
+  return {
+    updatedAt: Date.now(),
+    mesas: mesasFiltradas
+  };
 }

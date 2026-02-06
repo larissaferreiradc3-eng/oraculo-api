@@ -1,9 +1,16 @@
 // vortex27Engine.js
-// ENGINE VORTEX 27 + SCORE + STATUS ENTRAR NA RODADA 4
+// ENGINE PRINCIPAL DO ORÁCULO VORTEX 27 + SCORE + GREEN/LOSS CORRETO
 
-const MAX_HISTORICO = 30;
+const MAX_HISTORY = 30;
 const ESPERA_ENTRADA = 4;
 const MAX_RODADAS = 8;
+
+// cache interno por mesa
+const TABLE_STATE = new Map();
+
+/* =========================
+   HELPERS
+========================= */
 
 function duzia(n) {
   if (n >= 1 && n <= 12) return 1;
@@ -16,215 +23,252 @@ function cor(n) {
   const vermelhos = new Set([
     1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36
   ]);
-  if (n === 0) return "verde";
-  return vermelhos.has(n) ? "vermelho" : "preto";
+  if (n === 0) return "VERDE";
+  return vermelhos.has(n) ? "VERMELHO" : "PRETO";
 }
 
 function coluna(n) {
   if (n === 0) return null;
-  if (n % 3 === 1) return 1;
-  if (n % 3 === 2) return 2;
-  if (n % 3 === 0) return 3;
+  const col1 = new Set([1,4,7,10,13,16,19,22,25,28,31,34]);
+  const col2 = new Set([2,5,8,11,14,17,20,23,26,29,32,35]);
+  const col3 = new Set([3,6,9,12,15,18,21,24,27,30,33,36]);
+
+  if (col1.has(n)) return 1;
+  if (col2.has(n)) return 2;
+  if (col3.has(n)) return 3;
   return null;
 }
 
-/**
- * Bloco 2 expandido por soma +2
- */
-function gerarBloco2PorSoma(referencia) {
+/* =========================
+   MAPEAMENTO ALVOS
+========================= */
+
+function gerarAlvosExpandido(referencia) {
   const eixo = referencia + 2;
 
   const mapa = {
     2:  [2,12,20,21,22,32],
     4:  [2,12,20,21,22,32],
-    6:  [26,29],
-    8:  [26,29],
-    10: [20,22],
-    12: [12,21,32],
-    14: [12,21,32],
-    16: [26,29],
-    18: [20,22],
-    20: [20,22],
-    22: [22],
-    24: [24],
-    26: [26,29],
-    28: [28],
-    30: [32]
+    6:  [26,29,20,22],
+    8:  [26,29,20,22],
+    10: [20,22,12],
+    12: [12,21,32,20],
+    14: [12,21,32,22],
+    16: [26,29,32],
+    18: [20,22,21],
+    20: [20,22,12,32],
+    22: [22,20,12],
+    24: [24,21,32],
+    26: [26,29,20],
+    28: [28,26,29],
+    30: [32,21,22]
   };
 
   return mapa[eixo] ?? [];
 }
 
-/**
- * SCORE baseado em:
- * - força dos alvos (20/22/12/21/32 são "premium")
- * - repetição de cor nas últimas 5
- * - repetição de dúzia nas últimas 5
- * - repetição de coluna nas últimas 5
- */
-function calcularScore(history, alvos) {
-  let score = 0;
+/* =========================
+   SCORE
+========================= */
 
-  const premium = new Set([2, 12, 20, 21, 22, 32, 26, 29]);
+function calcularScore(history) {
+  // pega últimos 5 resultados (sem contar o atual)
+  const ultimos = history.slice(1, 6);
 
-  // peso por alvo premium
-  for (const a of alvos) {
-    if (premium.has(a)) score += 12;
-    else score += 6;
+  if (ultimos.length < 5) return 50;
+
+  const cores = ultimos.map(cor);
+  const duzias = ultimos.map(duzia);
+  const colunas = ultimos.map(coluna);
+
+  function freq(arr, value) {
+    return arr.filter((x) => x === value).length;
   }
 
-  // pega janela dos últimos 5
-  const janela = history.slice(0, 5);
+  const scoreCor = Math.max(
+    freq(cores, "VERMELHO"),
+    freq(cores, "PRETO")
+  ) * 10;
 
-  const cores = janela.map(cor);
-  const duzias = janela.map(duzia);
-  const colunas = janela.map(coluna);
+  const scoreDuzia = Math.max(
+    freq(duzias, 1),
+    freq(duzias, 2),
+    freq(duzias, 3)
+  ) * 10;
 
-  function freq(arr) {
-    const map = {};
-    for (const x of arr) {
-      if (!x) continue;
-      map[x] = (map[x] || 0) + 1;
-    }
-    return map;
-  }
+  const scoreColuna = Math.max(
+    freq(colunas, 1),
+    freq(colunas, 2),
+    freq(colunas, 3)
+  ) * 10;
 
-  const fCor = freq(cores);
-  const fDuzia = freq(duzias);
-  const fCol = freq(colunas);
+  let score = scoreCor + scoreDuzia + scoreColuna;
 
-  // soma padrões repetidos
-  score += (fCor["vermelho"] || 0) * 6;
-  score += (fCor["preto"] || 0) * 6;
-
-  score += (fDuzia[1] || 0) * 7;
-  score += (fDuzia[2] || 0) * 7;
-  score += (fDuzia[3] || 0) * 7;
-
-  score += (fCol[1] || 0) * 5;
-  score += (fCol[2] || 0) * 5;
-  score += (fCol[3] || 0) * 5;
-
-  // clamp 0-100
   if (score > 100) score = 100;
   if (score < 0) score = 0;
 
   return score;
 }
 
-/**
- * cria mesa caso não exista
- */
-function ensureMesa(oraculoState, mesaId, mesaNome) {
-  let mesa = oraculoState.mesas.find((m) => m.mesaId === mesaId);
+/* =========================
+   ENGINE
+========================= */
 
-  if (!mesa) {
-    mesa = {
-      mesaId,
-      mesaNome: mesaNome ?? "Mesa desconhecida",
-      status: "OBSERVANDO",
+export function processCollectorEvent(oraculoState, evento) {
+  const { mesaId, mesaNome, ultimoNumero, timestamp } = evento;
+
+  if (!TABLE_STATE.has(mesaId)) {
+    TABLE_STATE.set(mesaId, {
+      ativo: false,
       rodada: 0,
-      alvos: [],
       referencia: null,
-      ultimoNumero: null,
-      timestamp: null,
-      updatedAt: Date.now(),
+      alvos: [],
+      triggerNumero: null,
       history: [],
-      score: 0,
-      gatilhoAtivo: false
-    };
-
-    oraculoState.mesas.push(mesa);
+      score: 0
+    });
   }
 
-  if (mesaNome) mesa.mesaNome = mesaNome;
-
-  return mesa;
-}
-
-/**
- * PROCESSADOR PRINCIPAL
- */
-export function processCollectorEvent(oraculoState, payload) {
-  const { mesaId, mesaNome, ultimoNumero, timestamp } = payload;
-
-  const mesa = ensureMesa(oraculoState, mesaId, mesaNome);
-
-  mesa.updatedAt = Date.now();
-  mesa.timestamp = timestamp;
-  mesa.ultimoNumero = ultimoNumero;
+  const state = TABLE_STATE.get(mesaId);
 
   // atualiza histórico
-  mesa.history.unshift(ultimoNumero);
-  mesa.history = mesa.history.slice(0, MAX_HISTORICO);
+  state.history.unshift(ultimoNumero);
+  state.history = state.history.slice(0, MAX_HISTORY);
 
-  // =========================
-  // DETECTA 27 (gatilho)
-  // =========================
-  if (!mesa.gatilhoAtivo) {
-    if (ultimoNumero === 27 && mesa.history.length >= 3) {
-      const anterior1 = mesa.history[1];
-      const anterior2 = mesa.history[2];
+  // score sempre atualizado
+  state.score = calcularScore(state.history);
 
-      const d1 = duzia(anterior1);
-      const d2 = duzia(anterior2);
+  /* =========================
+     DETECTA GATILHO 27
+  ========================= */
 
-      // filtro obrigatório: 27 após 1ª/2ª dúzia
+  if (!state.ativo) {
+    if (ultimoNumero === 27 && state.history.length >= 3) {
+      const n1 = state.history[1];
+      const n2 = state.history[2];
+
+      const d1 = duzia(n1);
+      const d2 = duzia(n2);
+
+      // filtro obrigatório: 1ª e 2ª dúzia
       if ((d1 === 1 || d1 === 2) && (d2 === 1 || d2 === 2)) {
-        mesa.gatilhoAtivo = true;
-        mesa.status = "ATIVO";
-        mesa.rodada = 0;
-        mesa.referencia = anterior1;
-        mesa.alvos = [];
-        mesa.score = 0;
+        state.ativo = true;
+        state.rodada = 0;
+        state.referencia = n1;
+        state.alvos = [];
+        state.triggerNumero = 27;
       }
     }
 
-    return oraculoState;
+    return atualizarMesaNoState(oraculoState, {
+      mesaId,
+      mesaNome,
+      status: "OBSERVAR",
+      rodada: null,
+      alvos: [],
+      ultimoNumero,
+      timestamp,
+      score: state.score,
+      history: state.history
+    });
   }
 
-  // =========================
-  // CONTAGEM DE RODADAS
-  // =========================
-  mesa.rodada += 1;
+  /* =========================
+     SE ESTÁ ATIVO → CONTA RODADA
+  ========================= */
 
-  // =========================
-  // GERA ALVOS NA RODADA 4
-  // =========================
-  if (mesa.rodada === ESPERA_ENTRADA) {
-    mesa.alvos = gerarBloco2PorSoma(mesa.referencia);
-    mesa.score = calcularScore(mesa.history, mesa.alvos);
-    mesa.status = "ENTRAR"; // status especial
+  state.rodada += 1;
+
+  /* =========================
+     GERA ALVOS NA RODADA 4
+  ========================= */
+
+  if (state.rodada === ESPERA_ENTRADA) {
+    state.alvos = gerarAlvosExpandido(state.referencia);
+
+    // sempre incluir 0 como alvo opcional (green extra)
+    if (!state.alvos.includes(0)) {
+      state.alvos.push(0);
+    }
   }
 
-  // =========================
-  // GREEN
-  // =========================
-  if (mesa.alvos.includes(ultimoNumero)) {
-    mesa.status = "GREEN";
-    mesa.score = calcularScore(mesa.history, mesa.alvos);
-    return oraculoState;
+  /* =========================
+     GREEN (DURANTE O CICLO)
+  ========================= */
+
+  if (state.alvos.length > 0 && state.alvos.includes(ultimoNumero)) {
+    const snapshot = {
+      mesaId,
+      mesaNome,
+      status: "GREEN",
+      rodada: state.rodada,
+      rodadaResolucao: state.rodada,
+      numeroResolucao: ultimoNumero,
+      alvos: state.alvos,
+      ultimoNumero,
+      timestamp,
+      score: state.score,
+      history: state.history
+    };
+
+    TABLE_STATE.delete(mesaId);
+    return atualizarMesaNoState(oraculoState, snapshot);
   }
 
-  // =========================
-  // LOSS (estouro)
-  // =========================
-  if (mesa.rodada >= MAX_RODADAS) {
-    mesa.status = "LOSS";
-    mesa.score = calcularScore(mesa.history, mesa.alvos);
-    return oraculoState;
+  /* =========================
+     LOSS (PASSOU DA 8ª)
+  ========================= */
+
+  if (state.rodada > MAX_RODADAS) {
+    const snapshot = {
+      mesaId,
+      mesaNome,
+      status: "LOSS",
+      rodada: state.rodada,
+      rodadaResolucao: MAX_RODADAS,
+      numeroResolucao: ultimoNumero,
+      alvos: state.alvos,
+      ultimoNumero,
+      timestamp,
+      score: state.score,
+      history: state.history
+    };
+
+    TABLE_STATE.delete(mesaId);
+    return atualizarMesaNoState(oraculoState, snapshot);
   }
 
-  // =========================
-  // MANTÉM ATIVO
-  // =========================
-  if (mesa.rodada < ESPERA_ENTRADA) {
-    mesa.status = "ATIVO";
+  /* =========================
+     ATIVO NORMAL
+  ========================= */
+
+  return atualizarMesaNoState(oraculoState, {
+    mesaId,
+    mesaNome,
+    status: "ATIVO",
+    rodada: state.rodada,
+    alvos: state.alvos,
+    ultimoNumero,
+    timestamp,
+    score: state.score,
+    history: state.history
+  });
+}
+
+/* =========================
+   UPSERT NA LISTA DE MESAS
+========================= */
+
+function atualizarMesaNoState(oraculoState, mesaAtualizada) {
+  const index = oraculoState.mesas.findIndex((m) => m.mesaId === mesaAtualizada.mesaId);
+
+  if (index >= 0) {
+    oraculoState.mesas[index] = mesaAtualizada;
   } else {
-    // após rodada 4, se não bateu green ainda, continua ATIVO mas com alvos definidos
-    mesa.status = "ATIVO";
-    mesa.score = calcularScore(mesa.history, mesa.alvos);
+    oraculoState.mesas.push(mesaAtualizada);
   }
+
+  oraculoState.updatedAt = Date.now();
 
   return oraculoState;
 }
