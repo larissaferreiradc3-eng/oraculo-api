@@ -1,432 +1,247 @@
-// vortex27Engine.js
-// ENGINE DO ORÁCULO — VORTEX 27 + SCORE + CONFLUÊNCIA
-// Gera sinais ATIVO somente na rodada 4 com score >= 80
-// Encerra automaticamente em GREEN ou LOSS
-// Nunca envia alvos vazios e nunca envia 0 sozinho
+// server.js
+// ORÁCULO API — VERSÃO FINAL (PERSISTENTE + ENGINE VORTEX 27)
+// Compatível com Render (Express + app.listen)
+// Mantém estado no disco e aplica lógica automática do VORTEX 27 por mesa
 
-const MAX_HISTORICO = 30;
-const MAX_RODADAS = 8;
-const RODADA_ENTRADA = 4;
-const SCORE_MINIMO = 80;
-const MAX_ALVOS = 6;
+import express from "express";
+import cors from "cors";
 
-/* ============================
-   HELPERS BÁSICOS
-============================ */
+import { ensureStorage, loadState, saveState } from "./stateStorage.js";
+import { processCollectorEvent } from "./vortex27Engine.js";
 
-function duzia(n) {
-  if (n >= 1 && n <= 12) return 1;
-  if (n >= 13 && n <= 24) return 2;
-  if (n >= 25 && n <= 36) return 3;
-  return null;
-}
+/* =========================
+   CONFIG
+========================= */
 
-function coluna(n) {
-  if (n === 0) return null;
-  const mod = n % 3;
-  if (mod === 1) return 1;
-  if (mod === 2) return 2;
-  return 3;
-}
+const PORT = process.env.PORT || 10000;
 
-function cor(n) {
-  if (n === 0) return "verde";
+/* =========================
+   BOOT SEGURO
+========================= */
 
-  const vermelhos = new Set([
-    1, 3, 5, 7, 9, 12, 14, 16, 18,
-    19, 21, 23, 25, 27, 30, 32, 34, 36
-  ]);
+let oraculoState = { updatedAt: Date.now(), mesas: [] };
 
-  return vermelhos.has(n) ? "vermelho" : "preto";
-}
+try {
+  ensureStorage();
 
-/* ============================
-   GEMEOS (11/22/33)
-============================ */
+  const stateFromDisk = loadState();
 
-function expandirGemeos(alvos) {
-  const set = new Set(alvos);
-
-  const gemeos = [11, 22, 33];
-
-  const temGemeo = gemeos.some(n => set.has(n));
-  if (!temGemeo) return [...set];
-
-  for (const n of gemeos) {
-    if (set.size >= MAX_ALVOS) break;
-    set.add(n);
+  if (stateFromDisk && Array.isArray(stateFromDisk.mesas)) {
+    oraculoState = stateFromDisk;
+  } else {
+    saveState(oraculoState);
   }
 
-  return [...set];
-}
+  console.log("🔁 Estado carregado do disco:");
+  console.log(`→ mesas: ${oraculoState.mesas.length}`);
+} catch (err) {
+  console.error("❌ Erro ao carregar estado do disco. Iniciando vazio:", err.message);
+  oraculoState = { updatedAt: Date.now(), mesas: [] };
 
-/* ============================
-   MAPA DE SOMA (BASE)
-============================ */
-
-function gerarBasePorSoma(referencia) {
-  const eixo = referencia + 2;
-
-  const mapa = {
-    2:  [2, 12, 20, 21, 22, 32],
-    4:  [2, 12, 20, 21, 22, 32],
-    6:  [26, 29],
-    8:  [26, 29],
-    10: [20, 22],
-    12: [12, 21, 32],
-    14: [12, 21, 32],
-    16: [26, 29],
-    18: [20, 22],
-    20: [20, 22],
-    22: [22],
-    24: [24],
-    26: [26, 29],
-    28: [28],
-    30: [32]
-  };
-
-  return mapa[eixo] ?? [];
-}
-
-/* ============================
-   CONFLUÊNCIA: ESPELHOS / SUBSTITUIÇÕES
-============================ */
-
-function substituicoes(n) {
-  const map = {
-    0: [11, 22, 33],
-    1: [0, 10, 11, 22, 33],
-    2: [1, 3, 11, 20],
-    3: [2, 4, 12, 13, 24, 31, 35],
-    4: [3, 5, 13, 14, 25, 36, 30, 33],
-    5: [4, 6, 14, 15, 26, 22, 31],
-    6: [5, 7, 15, 16, 27, 14, 23, 32],
-    7: [6, 8, 16, 17, 28],
-    8: [7, 9, 17, 18, 29],
-    9: [8, 10, 18, 19, 26, 35],
-    10: [9, 11, 19, 20],
-    11: [10, 12, 20, 22, 33],
-    12: [11, 13, 21, 22],
-    13: [12, 14, 23, 24, 31],
-    14: [13, 15, 24, 25, 34],
-    15: [14, 16, 25, 26],
-    16: [15, 17, 32],
-    17: [16, 18, 34],
-    18: [17, 19, 36],
-    19: [18, 20, 33],
-    20: [19, 21, 16],
-    21: [20, 22, 2],
-    22: [21, 23, 11, 33],
-    23: [22, 24, 32],
-    24: [23, 25, 12],
-    25: [24, 26, 15],
-    26: [25, 27, 29],
-    27: [26, 28, 13],
-    28: [27, 29],
-    29: [28, 30, 26],
-    30: [29, 31, 26],
-    31: [30, 32, 13],
-    32: [31, 33, 16, 23],
-    33: [32, 34, 11, 22],
-    34: [33, 35, 14],
-    35: [34, 36, 17],
-    36: [35, 18]
-  };
-
-  return map[n] ?? [];
-}
-
-/* ============================
-   SCORE POR CONFLUÊNCIA
-============================ */
-
-function calcularScoreConfluencia(historico, candidatos) {
-  if (!historico || historico.length < 5) return 50;
-
-  const ultimos5 = historico.slice(0, 5);
-
-  let score = 0;
-
-  const freqCor = {};
-  const freqDuzia = {};
-  const freqColuna = {};
-
-  for (const n of ultimos5) {
-    const c = cor(n);
-    const d = duzia(n);
-    const col = coluna(n);
-
-    freqCor[c] = (freqCor[c] ?? 0) + 1;
-    if (d) freqDuzia[d] = (freqDuzia[d] ?? 0) + 1;
-    if (col) freqColuna[col] = (freqColuna[col] ?? 0) + 1;
+  try {
+    saveState(oraculoState);
+  } catch (e) {
+    console.error("⚠️ Falha ao salvar estado inicial:", e.message);
   }
-
-  for (const cand of candidatos) {
-    const c = cor(cand);
-    const d = duzia(cand);
-    const col = coluna(cand);
-
-    score += (freqCor[c] ?? 0) * 4;
-    if (d) score += (freqDuzia[d] ?? 0) * 3;
-    if (col) score += (freqColuna[col] ?? 0) * 3;
-  }
-
-  const maxPossivel = candidatos.length * (5 * 4 + 5 * 3 + 5 * 3);
-  let final = Math.round((score / maxPossivel) * 100);
-
-  if (final > 100) final = 100;
-  if (final < 0) final = 0;
-
-  return final;
 }
 
-/* ============================
-   GERAÇÃO DE ALVOS POR CONFLUÊNCIA
-============================ */
+/* =========================
+   APP
+========================= */
 
-function gerarAlvosPorConfluencia(referencia, historico) {
-  const baseSoma = gerarBasePorSoma(referencia);
-  const candidatos = new Set();
+const app = express();
 
-  for (const n of baseSoma) candidatos.add(n);
+/* =========================
+   CORS (LIBERA PARA OUTROS SITES)
+========================= */
 
-  for (const b of baseSoma) {
-    const subs = substituicoes(b);
-    for (const s of subs) candidatos.add(s);
-  }
+app.use(
+  cors({
+    origin: "*",
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
-  const subsRef = substituicoes(referencia);
-  for (const s of subsRef) candidatos.add(s);
+app.options("*", cors());
 
-  candidatos.delete(null);
-  candidatos.delete(undefined);
+app.use(express.json());
 
-  // Remove 27 (não pode ser alvo)
-  candidatos.delete(27);
+/* =========================
+   PROTEÇÃO EXTRA (LOGA ERROS GERAIS)
+========================= */
 
-  const lista = [...candidatos].filter(n => Number.isInteger(n) && n >= 0 && n <= 36);
+process.on("uncaughtException", (err) => {
+  console.error("🔥 uncaughtException:", err);
+});
 
-  const freq = {};
-  for (const n of historico) {
-    freq[n] = (freq[n] ?? 0) + 1;
-  }
+process.on("unhandledRejection", (err) => {
+  console.error("🔥 unhandledRejection:", err);
+});
 
-  lista.sort((a, b) => (freq[b] ?? 0) - (freq[a] ?? 0));
+/* =========================
+   HELPERS
+========================= */
 
-  let final = lista.slice(0, MAX_ALVOS);
-
-  final = expandirGemeos(final);
-
-  final = final.slice(0, MAX_ALVOS);
-
-  if (final.length === 1 && final[0] === 0) {
-    return [];
-  }
-
-  if (final.length < 2) return [];
-
-  return final;
+function isValidMesaId(mesaId) {
+  if (!mesaId) return false;
+  if (typeof mesaId !== "string") return false;
+  if (mesaId.trim().length < 2) return false;
+  return true;
 }
 
-/* ============================
-   RESET CICLO
-============================ */
-
-function resetarCiclo(mesa) {
-  mesa.status = "IDLE";
-  mesa.rodada = 0;
-  mesa.alvos = [];
-  mesa.score = 0;
-
-  mesa.vortex27.ativo = false;
-  mesa.vortex27.referencia = null;
-  mesa.vortex27.gatilhoNumero = null;
-  mesa.vortex27.gatilhoTimestamp = null;
-  mesa.vortex27.score = 0;
-  mesa.vortex27.entradaEnviada = false;
+function isValidNumero(n) {
+  if (n === null || n === undefined) return false;
+  const num = Number(n);
+  if (Number.isNaN(num)) return false;
+  if (num < 0 || num > 36) return false;
+  return true;
 }
 
-/* ============================
-   ENGINE PRINCIPAL
-============================ */
+/* =========================
+   ROTAS
+========================= */
 
-export function processCollectorEvent(oraculoState, evento) {
-  const { mesaId, mesaNome, ultimoNumero, timestamp } = evento;
+// HEALTHCHECK
+app.get("/health", (req, res) => {
+  return res.status(200).json({
+    ok: true,
+    service: "oraculo-api",
+    updatedAt: oraculoState.updatedAt,
+    totalMesas: oraculoState.mesas?.length ?? 0,
+  });
+});
 
-  if (!oraculoState.mesas) oraculoState.mesas = [];
+// HOME
+app.get("/", (req, res) => {
+  res.status(200).send("ORÁCULO API ONLINE");
+});
 
-  let mesa = oraculoState.mesas.find(m => m.mesaId === mesaId);
+// RECEBE EVENTOS DO COLETOR
+app.post("/oraculo/evento", (req, res) => {
+  try {
+    const body = req.body || {};
+    const { mesaId, mesaNome, ultimoNumero } = body;
 
-  if (!mesa) {
-    mesa = {
-      mesaId,
-      mesaNome: mesaNome ?? "Mesa desconhecida",
-      status: "IDLE",
-      rodada: 0,
-      alvos: [],
-      score: 0,
-      ultimoNumero: ultimoNumero,
-      timestamp: timestamp,
-      history: [],
-      vortex27: {
-        ativo: false,
-        referencia: null,
-        gatilhoNumero: null,
-        gatilhoTimestamp: null,
-        score: 0,
-        entradaEnviada: false
-      }
+    if (!isValidMesaId(mesaId)) {
+      console.error("❌ Evento rejeitado: mesaId inválido:", body);
+      return res.status(400).json({
+        ok: false,
+        error: "mesaId inválido",
+        recebido: body,
+      });
+    }
+
+    if (!isValidNumero(ultimoNumero)) {
+      console.error("❌ Evento rejeitado: ultimoNumero inválido:", body);
+      return res.status(400).json({
+        ok: false,
+        error: "ultimoNumero inválido (precisa ser 0 a 36)",
+        recebido: body,
+      });
+    }
+
+    const evento = {
+      mesaId: mesaId.trim(),
+      mesaNome: mesaNome ? String(mesaNome).trim() : null,
+      ultimoNumero: Number(ultimoNumero),
+      timestamp: Date.now(),
     };
 
-    oraculoState.mesas.push(mesa);
+    console.log("📥 EVENTO RECEBIDO:", evento);
+
+    // aplica engine
+    oraculoState = processCollectorEvent(oraculoState, evento);
+
+    // atualiza timestamp global
+    oraculoState.updatedAt = Date.now();
+
+    // salva persistente
+    saveState(oraculoState);
+
+    return res.status(200).json({
+      ok: true,
+      message: "Evento processado com sucesso",
+      evento,
+    });
+  } catch (err) {
+    console.error("❌ Erro interno ao processar evento:", err);
+
+    return res.status(500).json({
+      ok: false,
+      error: "Erro interno ao processar evento",
+      details: err.message,
+    });
   }
+});
 
-  if (mesaNome) mesa.mesaNome = mesaNome;
-
-  // histórico
-  mesa.history.unshift(ultimoNumero);
-  mesa.history = mesa.history.slice(0, MAX_HISTORICO);
-
-  mesa.ultimoNumero = ultimoNumero;
-  mesa.timestamp = timestamp;
-
-  const vortex = mesa.vortex27;
-
-  /* ============================
-     SE MESA ESTAVA FINALIZADA, LIBERA PRA NOVO CICLO
-  ============================ */
-
-  if (mesa.status === "GREEN" || mesa.status === "LOSS" || mesa.status === "CANCELADO") {
-    resetarCiclo(mesa);
-  }
-
-  /* ============================
-     DETECTA 27
-  ============================ */
-
-  if (!vortex.ativo && ultimoNumero === 27) {
-    vortex.ativo = true;
-
-    // número imediatamente anterior ao 27
-    vortex.referencia = mesa.history[1] ?? null;
-
-    vortex.gatilhoNumero = 27;
-    vortex.gatilhoTimestamp = timestamp;
-    vortex.score = 0;
-    vortex.entradaEnviada = false;
-
-    mesa.status = "OBSERVANDO";
-    mesa.rodada = 0;
-    mesa.alvos = [];
-    mesa.score = 0;
-
-    return oraculoState;
-  }
-
-  /* ============================
-     SE NÃO ESTÁ EM CICLO, MANTÉM IDLE
-  ============================ */
-
-  if (!vortex.ativo) {
-    mesa.status = "IDLE";
-    mesa.rodada = 0;
-    mesa.alvos = [];
-    mesa.score = 0;
-    return oraculoState;
-  }
-
-  /* ============================
-     AVANÇA RODADA
-  ============================ */
-
-  mesa.rodada += 1;
-
-  /* ============================
-     AINDA OBSERVANDO
-  ============================ */
-
-  if (mesa.rodada < RODADA_ENTRADA) {
-    mesa.status = "OBSERVANDO";
-    return oraculoState;
-  }
-
-  /* ============================
-     GERA ALVOS NA RODADA 4
-  ============================ */
-
-  if (mesa.rodada === RODADA_ENTRADA && !vortex.entradaEnviada) {
-    const referencia = vortex.referencia;
-
-    // se referencia for null (não existe número anterior), cancela
-    if (referencia === null || referencia === undefined) {
-      mesa.status = "CANCELADO";
-      vortex.ativo = false;
-      mesa.alvos = [];
-      mesa.score = 0;
-      return oraculoState;
+// STATUS GLOBAL
+app.get("/oraculo/status", (req, res) => {
+  try {
+    if (!oraculoState || !Array.isArray(oraculoState.mesas)) {
+      oraculoState = { updatedAt: Date.now(), mesas: [] };
+      saveState(oraculoState);
     }
 
-    const alvos = gerarAlvosPorConfluencia(referencia, mesa.history);
+    return res.status(200).json({
+      ok: true,
+      updatedAt: oraculoState.updatedAt,
+      totalMesas: oraculoState.mesas.length,
+      mesas: oraculoState.mesas,
+    });
+  } catch (err) {
+    console.error("❌ Erro ao retornar status:", err.message);
 
-    if (!alvos || alvos.length < 2) {
-      mesa.status = "CANCELADO";
-      vortex.ativo = false;
-      mesa.alvos = [];
-      mesa.score = 0;
-      return oraculoState;
-    }
-
-    const score = calcularScoreConfluencia(mesa.history, alvos);
-
-    vortex.score = score;
-    mesa.score = score;
-
-    if (score < SCORE_MINIMO) {
-      mesa.status = "CANCELADO";
-      vortex.ativo = false;
-      mesa.alvos = [];
-      mesa.score = 0;
-      return oraculoState;
-    }
-
-    mesa.alvos = alvos;
-    mesa.status = "ATIVO";
-    vortex.entradaEnviada = true;
-
-    return oraculoState;
+    return res.status(500).json({
+      ok: false,
+      error: "Erro ao retornar status",
+      details: err.message,
+    });
   }
+});
 
-  /* ============================
-     GREEN DETECTADO
-  ============================ */
+// LISTA RESUMIDA (DEBUG)
+app.get("/oraculo/mesas", (req, res) => {
+  try {
+    const mesas = (oraculoState.mesas || []).map((m) => ({
+      mesaId: m.mesaId,
+      mesaNome: m.mesaNome,
+      status: m.status,
+      rodada: m.rodada,
+      ultimoNumero: m.ultimoNumero,
+      score: m.score,
+      alvos: m.alvos,
+      updatedAt: m.timestamp,
+    }));
 
-  if (mesa.status === "ATIVO" && mesa.alvos.includes(ultimoNumero)) {
-    mesa.status = "GREEN";
-    mesa.numeroResolucao = ultimoNumero;
-    mesa.rodadaResolucao = mesa.rodada;
-
-    // encerra ciclo mas permite novos no futuro
-    vortex.ativo = false;
-    vortex.referencia = null;
-
-    return oraculoState;
+    return res.status(200).json({
+      ok: true,
+      total: mesas.length,
+      mesas,
+    });
+  } catch (err) {
+    console.error("❌ Erro ao listar mesas:", err.message);
+    return res.status(500).json({ ok: false, error: err.message });
   }
+});
 
-  /* ============================
-     LOSS DETECTADO
-  ============================ */
+// RESET (limpa tudo manualmente)
+app.post("/oraculo/reset", (req, res) => {
+  oraculoState = { updatedAt: Date.now(), mesas: [] };
+  saveState(oraculoState);
 
-  if (mesa.status === "ATIVO" && mesa.rodada >= MAX_RODADAS) {
-    mesa.status = "LOSS";
-    mesa.numeroResolucao = ultimoNumero;
-    mesa.rodadaResolucao = mesa.rodada;
+  console.log("🧹 RESET aplicado: todas as mesas apagadas.");
 
-    // encerra ciclo mas permite novos no futuro
-    vortex.ativo = false;
-    vortex.referencia = null;
+  return res.status(200).json({
+    ok: true,
+    message: "Reset aplicado com sucesso",
+  });
+});
 
-    return oraculoState;
-  }
+/* =========================
+   START
+========================= */
 
-  return oraculoState;
-}
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`🔮 ORÁCULO API rodando na porta ${PORT}`);
+});
