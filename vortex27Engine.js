@@ -1,6 +1,6 @@
 // vortex27Engine.js
 // ENGINE DO ORÁCULO — VORTEX 27 + SCORE + CONFLUÊNCIA
-// Gera sinais ATIVO somente na rodada 4 com score >= 80
+// Gera sinais ATIVO somente na rodada 4 com score >= SCORE_MINIMO
 // Encerra automaticamente em GREEN ou LOSS
 // Nunca envia alvos vazios e nunca envia 0 sozinho
 // Compatível com Render + Bot Telegram (mesa.score)
@@ -8,7 +8,10 @@
 const MAX_HISTORICO = 30;
 const MAX_RODADAS = 8;
 const RODADA_ENTRADA = 4;
-const SCORE_MINIMO = 80;
+
+// 🔥 Agora configurável por ENV (Render)
+const SCORE_MINIMO = Number(process.env.SCORE_MINIMO || 50);
+
 const MAX_ALVOS = 6;
 
 /* ============================
@@ -189,32 +192,24 @@ function gerarAlvosPorConfluencia(referencia, historico) {
   const baseSoma = gerarBasePorSoma(referencia);
   const candidatos = new Set();
 
-  // 1) Base soma
   for (const n of baseSoma) candidatos.add(n);
 
-  // 2) Substituições dos números base
   for (const b of baseSoma) {
     const subs = substituicoes(b);
     for (const s of subs) candidatos.add(s);
   }
 
-  // 3) Substituições da referência
   const subsRef = substituicoes(referencia);
   for (const s of subsRef) candidatos.add(s);
 
-  // remove inválidos
   candidatos.delete(null);
   candidatos.delete(undefined);
-
-  // remove 27
   candidatos.delete(27);
 
-  // filtra números válidos
   const lista = [...candidatos].filter(
     (n) => Number.isInteger(n) && n >= 0 && n <= 36
   );
 
-  // ordena por frequência histórica
   const freq = {};
   for (const n of historico) {
     freq[n] = (freq[n] ?? 0) + 1;
@@ -222,19 +217,13 @@ function gerarAlvosPorConfluencia(referencia, historico) {
 
   lista.sort((a, b) => (freq[b] ?? 0) - (freq[a] ?? 0));
 
-  // limita 6
   let final = lista.slice(0, MAX_ALVOS);
 
-  // expande gêmeos
   final = expandirGemeos(final);
 
-  // garante limite
   final = final.slice(0, MAX_ALVOS);
 
-  // regra: não permitir 0 sozinho
   if (final.length === 1 && final[0] === 0) return [];
-
-  // regra: mínimo 2 alvos
   if (final.length < 2) return [];
 
   return final;
@@ -296,10 +285,8 @@ export function processCollectorEvent(oraculoState, evento) {
     oraculoState.mesas.push(mesa);
   }
 
-  // atualiza nome
   if (mesaNome) mesa.mesaNome = mesaNome;
 
-  // atualiza histórico
   mesa.history.unshift(ultimoNumero);
   mesa.history = mesa.history.slice(0, MAX_HISTORICO);
 
@@ -308,24 +295,14 @@ export function processCollectorEvent(oraculoState, evento) {
 
   const vortex = mesa.vortex27;
 
-  /* ============================
-     SE MESA FINALIZOU, LIBERA PARA NOVO CICLO
-  ============================ */
-
   if (mesa.status === "GREEN" || mesa.status === "LOSS" || mesa.status === "CANCELADO") {
     resetarCiclo(mesa);
   }
 
-  /* ============================
-     DETECTA 27 (INICIA CICLO)
-  ============================ */
-
+  // DETECTA 27
   if (!vortex.ativo && ultimoNumero === 27) {
     vortex.ativo = true;
-
-    // número imediatamente anterior ao 27
     vortex.referencia = mesa.history[1] ?? null;
-
     vortex.gatilhoNumero = 27;
     vortex.gatilhoTimestamp = timestamp;
     vortex.score = 0;
@@ -339,10 +316,7 @@ export function processCollectorEvent(oraculoState, evento) {
     return oraculoState;
   }
 
-  /* ============================
-     SE NÃO ESTÁ EM CICLO, MANTÉM IDLE
-  ============================ */
-
+  // SE NÃO ESTÁ EM CICLO
   if (!vortex.ativo) {
     mesa.status = "IDLE";
     mesa.rodada = 0;
@@ -351,25 +325,15 @@ export function processCollectorEvent(oraculoState, evento) {
     return oraculoState;
   }
 
-  /* ============================
-     AVANÇA RODADA
-  ============================ */
-
+  // AVANÇA RODADA
   mesa.rodada += 1;
-
-  /* ============================
-     OBSERVANDO ANTES DA ENTRADA
-  ============================ */
 
   if (mesa.rodada < RODADA_ENTRADA) {
     mesa.status = "OBSERVANDO";
     return oraculoState;
   }
 
-  /* ============================
-     GERA ALVOS NA RODADA 4
-  ============================ */
-
+  // GERA ALVOS NA RODADA 4
   if (mesa.rodada === RODADA_ENTRADA && !vortex.entradaEnviada) {
     const referencia = vortex.referencia;
 
@@ -411,10 +375,7 @@ export function processCollectorEvent(oraculoState, evento) {
     return oraculoState;
   }
 
-  /* ============================
-     GREEN DETECTADO
-  ============================ */
-
+  // GREEN
   if (mesa.status === "ATIVO" && Array.isArray(mesa.alvos) && mesa.alvos.includes(ultimoNumero)) {
     mesa.status = "GREEN";
     mesa.numeroResolucao = ultimoNumero;
@@ -426,10 +387,7 @@ export function processCollectorEvent(oraculoState, evento) {
     return oraculoState;
   }
 
-  /* ============================
-     LOSS DETECTADO
-  ============================ */
-
+  // LOSS
   if (mesa.status === "ATIVO" && mesa.rodada >= MAX_RODADAS) {
     mesa.status = "LOSS";
     mesa.numeroResolucao = ultimoNumero;
