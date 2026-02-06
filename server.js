@@ -1,16 +1,11 @@
 // server.js
-// ORÁCULO API — VERSÃO FINAL (PERSISTENTE + ENGINE VORTEX 27)
+// ORÁCULO API — VERSÃO FINAL (PERSISTENTE + ENGINE VORTEX 27 + SCORE + LIMPEZA)
 // Mantém estado no disco e aplica lógica automática do VORTEX 27 por mesa
 
 import express from "express";
 import cors from "cors";
 
-import {
-  ensureStorage,
-  loadState,
-  saveState
-} from "./stateStorage.js";
-
+import { ensureStorage, loadState, saveState } from "./stateStorage.js";
 import { processCollectorEvent } from "./vortex27Engine.js";
 
 /* =========================
@@ -18,6 +13,10 @@ import { processCollectorEvent } from "./vortex27Engine.js";
 ========================= */
 
 const PORT = process.env.PORT || 3000;
+
+// limpa mesas que não recebem update há muito tempo
+const CLEAN_INTERVAL = 60 * 1000; // 1 min
+const EXPIRE_AFTER = 10 * 60 * 1000; // 10 min
 
 /* =========================
    BOOT
@@ -40,6 +39,32 @@ app.use(cors());
 app.use(express.json());
 
 /* =========================
+   LIMPEZA AUTOMÁTICA
+========================= */
+
+function limparMesasAntigas() {
+  const agora = Date.now();
+
+  const antes = oraculoState.mesas.length;
+
+  oraculoState.mesas = oraculoState.mesas.filter((m) => {
+    if (!m.updatedAt) return true;
+    return agora - m.updatedAt <= EXPIRE_AFTER;
+  });
+
+  const depois = oraculoState.mesas.length;
+
+  if (antes !== depois) {
+    console.log(`🧹 Limpeza automática: ${antes - depois} mesas removidas`);
+    saveState(oraculoState);
+  }
+}
+
+setInterval(() => {
+  limparMesasAntigas();
+}, CLEAN_INTERVAL);
+
+/* =========================
    ROTAS
 ========================= */
 
@@ -47,7 +72,6 @@ app.use(express.json());
 app.post("/oraculo/evento", (req, res) => {
   try {
     const body = req.body || {};
-
     const { mesaId, mesaNome, ultimoNumero } = body;
 
     if (!mesaId || ultimoNumero === undefined || ultimoNumero === null) {
